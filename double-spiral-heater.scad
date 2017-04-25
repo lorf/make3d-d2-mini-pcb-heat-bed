@@ -33,8 +33,8 @@ conductor_specific_resistance=material_specific_resistance/conductor_section_are
 rstep=((trace_width+trace_distance)*2)/360;
 turns_im=(spiral_max_radius-trace_width-trace_distance-spiral_min_radius)/(trace_width+trace_distance)/2;
 turns=ceil(turns_im*(360/step_angle))/(360/step_angle);
-actual_conductor_length1=sumv(spiral_length(spiral_min_radius,trace_width,trace_distance,turns,rstep,step_angle))/1000;
-actual_conductor_length2=sumv(spiral_length(spiral_min_radius+trace_distance+trace_width,trace_width,trace_distance,turns,rstep,step_angle))/1000;
+actual_conductor_length1=spiral_length(spiral_min_radius,trace_width,trace_distance,turns,rstep,step_angle)/1000;
+actual_conductor_length2=spiral_length(spiral_min_radius+trace_distance+trace_width,trace_width,trace_distance,turns,rstep,step_angle)/1000;
 actual_conductor_length=actual_conductor_length1+actual_conductor_length2;
 actual_conductor_resistance_20=conductor_specific_resistance*actual_conductor_length;
 actual_conductor_current_20=heater_voltage/actual_conductor_resistance_20;
@@ -72,8 +72,8 @@ difference() {
 function sumv(v,i=0) = (i==len(v)-1 ? v[i] : v[i] + sumv(v,i+1));
 
 function spiral_length(r=1,width=2,gap=2,turns=3,rstep,step_angle) = 
-    [for(t=[0:step_angle:360*turns+0.001])
-        2*(r+(t+step_angle/2)*rstep)*sin(step_angle/2)];
+    sumv([for(t=[0:step_angle:360*turns+0.001])
+        2*(r+(t+step_angle/2)*rstep)*sin(step_angle/2)]);
 
 module double_spiral(r=10,width=2,gap=2,turns=3,rstep,step_angle)
 {
