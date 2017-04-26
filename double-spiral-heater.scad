@@ -1,3 +1,5 @@
+part="demo"; // [demo,mill,throughhole]
+
 // Copper at 20 °C, Ohm*mm^2/m
 material_specific_resistance=0.018;
 // Temperature coefficient of resistance, Ohm/°C
@@ -6,21 +8,30 @@ conductor_thickness=0.035;
 // DC Voltage, in Volts
 heater_voltage=12;
 
-trace_width=1.8;
+trace_width=0.8;
 // Distance between adjacent traces
 trace_distance=1;
 spiral_min_radius=3;
-spiral_max_radius=120;
+spiral_max_radius=65;
 
 contact_trace_width=8;
 contact_distance=2;
 // Distance from the spiral
-contact_hole_distance=20;
+contact_hole_distance=12;
 contact_hole_width=1.5;
 contact_hole_length=3;
 
 // Spiral segment angle
 step_angle=9;
+
+// Outer edges and fixation
+fixation_radius=87.6;
+fixation_angle=37.28/2;
+fixation_hole_diameter=3.2;
+//base_radius=272.4*sqrt(3)/3-30;
+base_radius=spiral_max_radius*2+12;
+base_cut_radius=2*101-25;
+thermistor_hole=3;
 
 /* [Hidden] */
 
@@ -54,19 +65,36 @@ echo(str("Conductor resistance at 100°C: ", actual_conductor_resistance_100," O
 echo(str("Conductor current at 100°C: ",actual_conductor_current_100," A"));
 echo(str("Conductor wattage at 100°C: ",actual_conductor_wattage_100," W"));
 
-// Draw a double spiral
-difference() {
-    union() {
-        rotate(-360*(ceil(turns)-turns)) {
-            double_spiral(spiral_min_radius,trace_width,trace_distance,turns,rstep,step_angle);
-            double_spiral_central_contact();
+if (part=="demo") {
+    color("blue") {
+        difference() {
+            bed_shape();
+    
+            bed_holes();
+            offset(1)
+                heater_shape();
         }
-        double_spiral_ends();
     }
     
-    // Cleanup space between contacts
-    translate([-contact_distance/2,spiral_min_radius+turns*rstep*360+trace_width/2+trace_distance/2])
-        square([contact_distance,trace_distance+trace_width]);
+    difference() {
+        heater_shape();
+        contact_holes();
+    }
+} else if (part=="mill") {
+    difference() {
+        bed_shape();
+
+        offset(1)
+            heater_shape();
+    }
+    heater_shape();
+} else if (part=="throughhole") {
+    difference() {
+        bed_shape();
+        
+        bed_holes();
+        contact_holes();
+    }
 }
 
 function sumv(v,i=0) = (i==len(v)-1 ? v[i] : v[i] + sumv(v,i+1));
@@ -103,37 +131,79 @@ module double_spiral_central_contact()
     }
 }
 
+module contact_holes()
+{
+    translate([0,spiral_min_radius+turns*rstep*360+trace_distance+trace_width/2+contact_hole_distance]) {
+        translate([-contact_distance/2-contact_trace_width/2,0]) {
+            hull() {
+                translate([0,(contact_hole_length-contact_hole_width)/2])
+                    circle(d=contact_hole_width);
+                translate([0,-(contact_hole_length-contact_hole_width)/2])
+                    circle(d=contact_hole_width);
+            }
+        }
+
+        translate([contact_distance/2+contact_trace_width/2,0]) {
+            hull() {
+                translate([0,(contact_hole_length-contact_hole_width)/2])
+                    circle(d=contact_hole_width);
+                translate([0,-(contact_hole_length-contact_hole_width)/2])
+                    circle(d=contact_hole_width);
+            }
+        }
+    }
+}
+
 module double_spiral_ends()
 {
-    translate([-contact_distance/2-contact_trace_width,spiral_min_radius+turns*rstep*360+trace_distance+trace_width/2]) {
-        difference() {
-            square([contact_trace_width,contact_hole_distance+contact_hole_length/2+contact_trace_width/2]);
-            translate([contact_trace_width/2,contact_hole_distance]) {
-                hull() {
-                    translate([0,(contact_hole_length-contact_hole_width)/2])
-                        circle(d=contact_hole_width);
-                    translate([0,-(contact_hole_length-contact_hole_width)/2])
-                        circle(d=contact_hole_width);
-                }
-            }
-        }
-    }
+    translate([-contact_distance/2-contact_trace_width,spiral_min_radius+turns*rstep*360+trace_distance+trace_width/2])
+        square([contact_trace_width,contact_hole_distance+contact_hole_length/2+contact_trace_width/2]);
 
     translate([contact_distance/2,spiral_min_radius+turns*rstep*360-trace_width/2]) {
-        difference() {
-            union() {
-                square([contact_trace_width,contact_hole_distance+contact_hole_length/2+contact_trace_width/2+trace_distance+trace_width]);
-                translate([-contact_distance/2-.001,0])
-                    square([contact_distance/2+1,trace_width]);
-            }
-            translate([contact_trace_width/2,contact_hole_distance+trace_distance+trace_width]) {
-                hull() {
-                    translate([0,(contact_hole_length-contact_hole_width)/2])
-                        circle(d=contact_hole_width);
-                    translate([0,-(contact_hole_length-contact_hole_width)/2])
-                        circle(d=contact_hole_width);
-                }
-            }
+        union() {
+            square([contact_trace_width,contact_hole_distance+contact_hole_length/2+contact_trace_width/2+trace_distance+trace_width]);
+            translate([-contact_distance/2-.001,0])
+                square([contact_distance/2+1,trace_width]);
         }
     }
+}
+
+module heater_shape()
+{
+    difference() {
+        union() {
+            rotate(-360*(ceil(turns)-turns)) {
+                double_spiral(spiral_min_radius,trace_width,trace_distance,turns,rstep,step_angle);
+                double_spiral_central_contact();
+            }
+            double_spiral_ends();
+        }
+        
+        // Cleanup space between contacts
+        translate([-contact_distance/2,spiral_min_radius+turns*rstep*360+trace_width/2+trace_distance/2])
+            square([contact_distance,trace_distance+trace_width]);
+    }
+}
+
+module bed_shape()
+{
+    intersection() {
+        rotate(-30)
+            circle(r=base_radius,$fn=3);
+        rotate(30)
+           circle(r=base_cut_radius,$fn=3);
+    }
+}
+
+module bed_holes()
+{
+    for (a=[0:120:360]) {
+        rotate(-30+a-fixation_angle)
+            translate([fixation_radius,0])
+                #circle(d=fixation_hole_diameter);
+        rotate(-30+a+fixation_angle)
+            translate([fixation_radius,0])
+                #circle(d=fixation_hole_diameter);
+    }
+    circle(d=thermistor_hole);
 }
