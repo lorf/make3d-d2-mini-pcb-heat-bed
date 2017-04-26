@@ -1,18 +1,26 @@
 part="all"; // [all,mill,throughhole]
 
+// Electrical charachteristics
+
 // Copper at 20 °C, Ohm*mm^2/m
 material_specific_resistance=0.018;
 // Temperature coefficient of resistance, Ohm/°C
 material_tcr=0.004;
-conductor_thickness=0.035;
 // DC Voltage, in Volts
 heater_voltage=12;
 
+// Heater conductor sizes
+
+conductor_thickness=0.035;
 trace_width=0.8;
 // Distance between adjacent traces
 trace_distance=1;
 spiral_min_radius=3;
 spiral_max_radius=65;
+// Spiral segment angle
+step_angle=9;
+
+// Heater solder pads
 
 contact_trace_width=8;
 contact_distance=2;
@@ -21,18 +29,16 @@ contact_hole_distance=12;
 contact_hole_width=1.5;
 contact_hole_length=3;
 
-// Spiral segment angle
-step_angle=9;
+// Outer bed shape and fixation
 
-// Outer shape and fixation
+// Distance to fixation holes from center
 fixation_radius=87.6;
-fixation_angle=37.28/2;
+fixation_angle=18.64;
 fixation_hole_diameter=3.2;
-//base_radius=272.4*sqrt(3)/3-30;
-base_radius=spiral_max_radius*2+12;
-base_cut_radius=2*101-25;
-thermistor_hole=3;
-heater_to_polygon_offset=2;
+base_radius=142;
+base_cut_radius=177;
+thermistor_hole_diameter=3;
+heater_to_polygon_distance=2;
 
 /* [Hidden] */
 
@@ -71,7 +77,7 @@ if (part=="all") {
         bed_shape();
 
         bed_holes();
-        offset(heater_to_polygon_offset)
+        offset(heater_to_polygon_distance)
             heater_shape();
     }
     
@@ -83,7 +89,7 @@ if (part=="all") {
     difference() {
         bed_shape();
 
-        offset(heater_to_polygon_offset)
+        offset(heater_to_polygon_distance)
             heater_shape();
     }
     heater_shape();
@@ -204,5 +210,5 @@ module bed_holes()
             translate([fixation_radius,0])
                 circle(d=fixation_hole_diameter);
     }
-    circle(d=thermistor_hole);
+    circle(d=thermistor_hole_diameter);
 }
