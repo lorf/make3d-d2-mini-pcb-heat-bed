@@ -25,7 +25,7 @@ step_angle=9;
 contact_trace_width=8;
 contact_distance=2;
 // Distance from the spiral
-contact_hole_distance=12;
+contact_hole_distance=20;
 contact_hole_width=1.5;
 contact_hole_length=3;
 
@@ -82,7 +82,10 @@ if (part=="all") {
     }
     
     difference() {
-        heater_shape();
+        intersection() {
+            heater_shape();
+            bed_shape();
+        }
         contact_holes();
     }
 } else if (part=="mill") {
@@ -92,7 +95,10 @@ if (part=="all") {
         offset(heater_to_polygon_distance)
             heater_shape();
     }
-    heater_shape();
+    intersection() {
+        heater_shape();
+        bed_shape();
+    }
 } else if (part=="throughhole") {
     difference() {
         bed_shape();
