@@ -12,9 +12,9 @@ heater_voltage=12;
 // Heater conductor sizes
 
 conductor_thickness=0.035;
-trace_width=0.8;
+trace_width=1.1;
 // Distance between adjacent traces
-trace_distance=1;
+trace_distance=0.8;
 spiral_min_radius=3;
 spiral_max_radius=65;
 // Spiral segment angle
@@ -24,8 +24,8 @@ step_angle=9;
 
 contact_trace_width=8;
 contact_distance=2;
-// Distance from the spiral
-contact_hole_distance=20;
+// Distance from the center
+contact_hole_distance=85;
 contact_hole_width=1.5;
 contact_hole_length=3;
 
@@ -144,7 +144,7 @@ module double_spiral_central_contact()
 
 module contact_holes()
 {
-    translate([0,spiral_min_radius+turns*rstep*360+trace_distance+trace_width/2+contact_hole_distance]) {
+    translate([0,contact_hole_distance]) {
         translate([-contact_distance/2-contact_trace_width/2,0]) {
             hull() {
                 translate([0,(contact_hole_length-contact_hole_width)/2])
@@ -168,11 +168,11 @@ module contact_holes()
 module double_spiral_ends()
 {
     translate([-contact_distance/2-contact_trace_width,spiral_min_radius+turns*rstep*360+trace_distance+trace_width/2])
-        square([contact_trace_width,contact_hole_distance+contact_hole_length/2+contact_trace_width/2]);
+        square([contact_trace_width,contact_hole_distance-spiral_max_radius+contact_hole_length/2+contact_trace_width/2]);
 
     translate([contact_distance/2,spiral_min_radius+turns*rstep*360-trace_width/2]) {
         union() {
-            square([contact_trace_width,contact_hole_distance+contact_hole_length/2+contact_trace_width/2+trace_distance+trace_width]);
+            square([contact_trace_width,contact_hole_distance-spiral_max_radius+contact_hole_length/2+contact_trace_width/2+trace_distance+trace_width]);
             translate([-contact_distance/2-.001,0])
                 square([contact_distance/2+1,trace_width]);
         }
