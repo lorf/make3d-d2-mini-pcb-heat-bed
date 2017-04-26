@@ -1,4 +1,4 @@
-part="demo"; // [demo,mill,throughhole]
+part="all"; // [all,mill,throughhole]
 
 // Copper at 20 °C, Ohm*mm^2/m
 material_specific_resistance=0.018;
@@ -24,7 +24,7 @@ contact_hole_length=3;
 // Spiral segment angle
 step_angle=9;
 
-// Outer edges and fixation
+// Outer shape and fixation
 fixation_radius=87.6;
 fixation_angle=37.28/2;
 fixation_hole_diameter=3.2;
@@ -32,6 +32,7 @@ fixation_hole_diameter=3.2;
 base_radius=spiral_max_radius*2+12;
 base_cut_radius=2*101-25;
 thermistor_hole=3;
+heater_to_polygon_offset=2;
 
 /* [Hidden] */
 
@@ -65,15 +66,13 @@ echo(str("Conductor resistance at 100°C: ", actual_conductor_resistance_100," O
 echo(str("Conductor current at 100°C: ",actual_conductor_current_100," A"));
 echo(str("Conductor wattage at 100°C: ",actual_conductor_wattage_100," W"));
 
-if (part=="demo") {
-    color("blue") {
-        difference() {
-            bed_shape();
-    
-            bed_holes();
-            offset(1)
-                heater_shape();
-        }
+if (part=="all") {
+    difference() {
+        bed_shape();
+
+        bed_holes();
+        offset(heater_to_polygon_offset)
+            heater_shape();
     }
     
     difference() {
@@ -84,7 +83,7 @@ if (part=="demo") {
     difference() {
         bed_shape();
 
-        offset(1)
+        offset(heater_to_polygon_offset)
             heater_shape();
     }
     heater_shape();
@@ -200,10 +199,10 @@ module bed_holes()
     for (a=[0:120:360]) {
         rotate(-30+a-fixation_angle)
             translate([fixation_radius,0])
-                #circle(d=fixation_hole_diameter);
+                circle(d=fixation_hole_diameter);
         rotate(-30+a+fixation_angle)
             translate([fixation_radius,0])
-                #circle(d=fixation_hole_diameter);
+                circle(d=fixation_hole_diameter);
     }
     circle(d=thermistor_hole);
 }
