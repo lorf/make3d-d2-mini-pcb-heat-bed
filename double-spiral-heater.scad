@@ -48,7 +48,7 @@ conductor_specific_resistance=material_specific_resistance/conductor_section_are
 
 // Radius step per one degree
 rstep=((trace_width+trace_distance)*2)/360;
-spiral_min_radius=thermistor_hole_diameter+trace_width+2*trace_distance;
+spiral_min_radius=thermistor_hole_diameter+trace_width+trace_distance;
 central_contact_hole_diameter=spiral_min_radius-trace_width;
 turns_im=(spiral_max_radius-trace_width-trace_distance-spiral_min_radius)/(trace_width+trace_distance)/2;
 turns=ceil(turns_im*(360/step_angle))/(360/step_angle);
