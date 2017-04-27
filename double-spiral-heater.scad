@@ -1,4 +1,4 @@
-part="all"; // [all,mill,throughhole]
+part="demo"; // [all,demo,mill,throughhole]
 
 // Electrical charachteristics
 
@@ -88,6 +88,45 @@ if (part=="all") {
             bed_shape();
         }
         contact_holes();
+    }
+} else if (part=="demo") {
+    fr4=1.5;
+    
+    difference() {
+        union() {
+            color("khaki")
+                linear_extrude(height=fr4)
+                    bed_shape();
+        
+            color("sandybrown") {
+                translate([0,0,fr4]) {
+                    linear_extrude(height=conductor_thickness) {
+                        difference() {
+                            bed_shape();
+                    
+                            //bed_holes();
+                            offset(heater_to_polygon_distance)
+                                heater_shape();
+                        }
+                        difference() {
+                            intersection() {
+                                heater_shape();
+                                bed_shape();
+                            }
+                            //contact_holes();
+                        }
+                    }
+                }
+            }
+        }
+        
+        #translate([0,0,-10])
+        {
+            linear_extrude(height=fr4+20) {
+                bed_holes();
+                contact_holes();
+            }
+        }
     }
 } else if (part=="mill") {
     difference() {
