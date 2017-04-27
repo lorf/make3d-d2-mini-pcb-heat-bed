@@ -15,7 +15,6 @@ conductor_thickness=0.035;
 trace_width=1.1;
 // Distance between adjacent traces
 trace_distance=0.8;
-spiral_min_radius=3;
 spiral_max_radius=65;
 // Spiral segment angle
 step_angle=9;
@@ -37,7 +36,7 @@ fixation_angle=18.64;
 fixation_hole_diameter=3.2;
 base_radius=142;
 base_cut_radius=177;
-thermistor_hole_diameter=3;
+thermistor_hole_diameter=2;
 heater_to_polygon_distance=2;
 
 /* [Hidden] */
@@ -49,6 +48,8 @@ conductor_specific_resistance=material_specific_resistance/conductor_section_are
 
 // Radius step per one degree
 rstep=((trace_width+trace_distance)*2)/360;
+spiral_min_radius=thermistor_hole_diameter+trace_width+2*trace_distance;
+central_contact_hole_diameter=spiral_min_radius-trace_width;
 turns_im=(spiral_max_radius-trace_width-trace_distance-spiral_min_radius)/(trace_width+trace_distance)/2;
 turns=ceil(turns_im*(360/step_angle))/(360/step_angle);
 actual_conductor_length1=spiral_length(spiral_min_radius,trace_width,trace_distance,turns,rstep,step_angle)/1000;
@@ -123,21 +124,25 @@ module double_spiral(r=10,width=2,gap=2,turns=3,rstep,step_angle)
             [(r+width/2+t*rstep)*sin(t),(r+width/2+t*rstep)*cos(t)]]
             ));
     polygon(points=concat(
-        [for(t=[0:step_angle:360*turns+0.001]) 
+        [for(t=[-180:step_angle:360*turns+0.001]) 
             [(r-width/2+t*rstep+width+gap)*sin(t),(r-width/2+t*rstep+width+gap)*cos(t)]],
-        [for(t=[360*turns:-step_angle:-0.001]) 
+        [for(t=[360*turns:-step_angle:-180-0.001]) 
             [(r+width/2+t*rstep+width+gap)*sin(t),(r+width/2+t*rstep+width+gap)*cos(t)]]
             ));
 }
 
 module double_spiral_central_contact()
 {
-    translate([0,spiral_min_radius+trace_width/2+trace_distance/2]) {
-        difference() {
-            circle(d=2*trace_width+trace_distance);
-            circle(d=trace_distance);
-            translate([0,-trace_width-trace_distance/2-1])
-                square([trace_width+trace_distance/2+1,2*trace_width+trace_distance+2]);
+    for (mm=[0,1]) {
+        rotate(mm*180) {
+            translate([0,(trace_width/2+central_contact_hole_diameter/2)]) {
+                difference() {
+                    circle(d=2*trace_width+central_contact_hole_diameter);
+                    circle(d=central_contact_hole_diameter);
+                    translate([0,-2*central_contact_hole_diameter])
+                        square(4*central_contact_hole_diameter);
+                }
+            }
         }
     }
 }
@@ -216,5 +221,7 @@ module bed_holes()
             translate([fixation_radius,0])
                 circle(d=fixation_hole_diameter);
     }
-    circle(d=thermistor_hole_diameter);
+    rotate(-360*(ceil(turns)-turns))
+        translate([0,(trace_width/2+central_contact_hole_diameter/2)])
+            circle(d=thermistor_hole_diameter);
 }
