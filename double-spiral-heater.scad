@@ -12,9 +12,9 @@ heater_voltage=12;
 // Heater conductor sizes
 
 conductor_thickness=0.035;
-trace_width=1.1;
+trace_width=1.2;
 // Distance between adjacent traces
-trace_distance=0.8;
+trace_distance=0.5;
 spiral_max_radius=65;
 // Spiral segment angle
 step_angle=9;
@@ -37,6 +37,7 @@ fixation_hole_diameter=3.2;
 base_radius=142;
 base_cut_radius=177;
 thermistor_hole_diameter=2;
+thermistor_to_trace_distance=0.5;
 heater_to_polygon_distance=2;
 
 /* [Hidden] */
@@ -48,7 +49,7 @@ conductor_specific_resistance=material_specific_resistance/conductor_section_are
 
 // Radius step per one degree
 rstep=((trace_width+trace_distance)*2)/360;
-spiral_min_radius=thermistor_hole_diameter+trace_width+trace_distance;
+spiral_min_radius=thermistor_hole_diameter+trace_width+2*thermistor_to_trace_distance;
 central_contact_hole_diameter=spiral_min_radius-trace_width;
 turns_im=(spiral_max_radius-trace_width-trace_distance-spiral_min_radius)/(trace_width+trace_distance)/2;
 turns=ceil(turns_im*(360/step_angle))/(360/step_angle);
