@@ -149,7 +149,7 @@ if (part=="all") {
     }
 }
 
-function sumv(v,i=0) = (i==len(v)-1 ? v[i] : v[i] + sumv(v,i+1));
+function sumv(v,i=0,acc=0) = i==len(v)-1 ? acc+v[i] : sumv(v,i+1,acc+v[i]);
 
 function spiral_length(r=1,width=2,gap=2,turns=3,rstep,step_angle) = 
     sumv([for(t=[0:step_angle:360*turns+0.001])
