@@ -1,4 +1,6 @@
 part="demo"; // [all,demo,mill,throughhole]
+// Select which parameter should be calculated, based on other parameters
+mode="trace_width"; // [trace_width,power]
 
 // Electrical charachteristics
 
@@ -8,10 +10,14 @@ material_specific_resistance=0.018;
 material_tcr=0.004;
 // DC Voltage, in Volts
 heater_voltage=12;
+// Heater power, in Watts, used in "trace_width" mode.
+heater_power=45;
 
 // Heater conductor sizes
 
+// PCB copper thickness
 conductor_thickness=0.035;
+// Trace width, in mm, used in "power" mode
 trace_width=1.2;
 // Distance between adjacent traces
 trace_distance=0.5;
@@ -157,9 +163,37 @@ if (part=="all") {
 
 function sumv(v,i=0,acc=0) = i==len(v)-1 ? acc+v[i] : sumv(v,i+1,acc+v[i]);
 
-function spiral_length(r=1,width=2,gap=2,turns=3,rstep,step_angle) = 
+function spiral_length_old(r=1,width=2,gap=2,turns=3,rstep,step_angle) = 
     sumv([for(t=[0:step_angle:360*turns+0.001])
         2*(r+(t+step_angle/2)*rstep)*sin(step_angle/2)]);
+
+// http://www.giangrandi.ch/soft/spiral/spiral.shtml
+function spiral_length(india,outdia,intvl) =
+    let(phi0=PI*india/intvl,phi1=PI*outdia/intvl)
+        ((phi1*sqrt(pow(phi1,2)+1)+log(phi1+sqrt(pow(phi1,2)+1)))/2
+        -(phi0*sqrt(pow(phi0,2)+1)+log(phi0+sqrt(pow(phi0,2)+1)))/2)
+            *intvl/(2*PI);
+function spiral_dlength_dphi(phi,intvl) =
+    ((2*pow(phi,2)+1)/(2*sqrt(pow(phi,2)+1))
+    +(phi+sqrt(pow(phi,2)+1))/(2*phi*sqrt(pow(phi,2)+1)+2*pow(phi,2)+2))
+        *intvl/(2*PI);
+maxiter=10;
+function spiral_phi1_iter(ii=0,india,outdia,intvl,length) =
+    let(phi1=PI*outdia/intvl,
+        dphi=(spiral_length(india,outdia,intvl)-length)/spiral_dlength_dphi(phi1,intvl),
+        noutdia=(phi1-dphi)*intvl/PI)
+            ((ii>=maxiter||abs(dphi)<0.001)?
+                phi1-dphi:spiral_phi1_iter(ii+1,india,noutdia,intvl,length));
+function spiral_outdia(india,length,intvl) =
+    let(turns1=(intvl-india+sqrt(pow(india-intvl,2)+4*intvl*length/PI))/(2*intvl),
+        outdia1=2*turns1*intvl+india,
+        phi1=spiral_phi1_iter(0,india,outdia1,intvl,length))
+            phi1*intvl/PI;
+
+// Debug
+echo(spiral_length=spiral_length(10,130,3.4));
+echo(spiral_outdia=spiral_outdia(10,3881.09,3.4));
+
 
 module double_spiral(r=10,width=2,gap=2,turns=3,rstep,step_angle)
 {
