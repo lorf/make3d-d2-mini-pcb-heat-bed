@@ -44,8 +44,8 @@ heater_to_polygon_distance=2;
 
 $fn=32;
 
-conductor_section_area=conductor_thickness*trace_width;
-conductor_specific_resistance=material_specific_resistance/conductor_section_area;
+conductor_sectional_area=conductor_thickness*trace_width;
+conductor_specific_resistance=material_specific_resistance/conductor_sectional_area;
 
 // Radius step per one degree
 rstep=((trace_width+trace_distance)*2)/360;
@@ -53,26 +53,34 @@ spiral_min_radius=thermistor_hole_diameter+trace_width+2*thermistor_to_trace_dis
 central_contact_hole_diameter=spiral_min_radius-trace_width;
 turns_im=(spiral_max_radius-trace_width-trace_distance-spiral_min_radius)/(trace_width+trace_distance)/2;
 turns=ceil(turns_im*(360/step_angle))/(360/step_angle);
+heater_area=PI*pow(spiral_max_radius,2);
 actual_conductor_length1=spiral_length(spiral_min_radius,trace_width,trace_distance,turns,rstep,step_angle)/1000;
 actual_conductor_length2=spiral_length(spiral_min_radius+trace_distance+trace_width,trace_width,trace_distance,turns,rstep,step_angle)/1000;
 actual_conductor_length=actual_conductor_length1+actual_conductor_length2;
-actual_conductor_resistance_20=conductor_specific_resistance*actual_conductor_length;
-actual_conductor_current_20=heater_voltage/actual_conductor_resistance_20;
-actual_conductor_wattage_20=pow(heater_voltage,2)/actual_conductor_resistance_20;
-actual_conductor_resistance_100=actual_conductor_resistance_20*(1+material_tcr*(100-20));
-actual_conductor_current_100=heater_voltage/actual_conductor_resistance_100;
-actual_conductor_wattage_100=pow(heater_voltage,2)/actual_conductor_resistance_100;
+actual_heater_resistance_20=conductor_specific_resistance*actual_conductor_length;
+actual_heater_current_20=heater_voltage/actual_heater_resistance_20;
+actual_heater_power_20=pow(heater_voltage,2)/actual_heater_resistance_20;
+heater_specific_power_20=actual_heater_power_20/heater_area;
+actual_heater_resistance_100=actual_heater_resistance_20*(1+material_tcr*(100-20));
+actual_heater_current_100=heater_voltage/actual_heater_resistance_100;
+actual_heater_power_100=pow(heater_voltage,2)/actual_heater_resistance_100;
+heater_specific_power_100=actual_heater_power_100/heater_area;
 
-echo(str("Conductor section area: ",conductor_section_area," mm^2"));
+echo(str("Heater area: ",heater_area/100," cm^2"));
+echo(str("Conductor sectional area: ",conductor_sectional_area," mm^2"));
 echo(str("Conductor specific resistance: ",conductor_specific_resistance," Ohm/m"));
 echo(str("Number of spiral turns: ",turns));
 echo(str("Conductor length: ",actual_conductor_length1,"+",actual_conductor_length2,"=",actual_conductor_length," m"));
-echo(str("Conductor resistance at 20°C: ", actual_conductor_resistance_20," Ohm"));
-echo(str("Conductor current at 20°C: ",actual_conductor_current_20," A"));
-echo(str("Conductor wattage at 20°C: ",actual_conductor_wattage_20," W"));
-echo(str("Conductor resistance at 100°C: ", actual_conductor_resistance_100," Ohm"));
-echo(str("Conductor current at 100°C: ",actual_conductor_current_100," A"));
-echo(str("Conductor wattage at 100°C: ",actual_conductor_wattage_100," W"));
+echo("");
+echo(str("Heater resistance at 20 °C: ", actual_heater_resistance_20," Ohm"));
+echo(str("Heater current at 20 °C: ",actual_heater_current_20," A"));
+echo(str("Heater power at 20 °C: ",actual_heater_power_20," W"));
+echo(str("Heater specific power at 20 °C: ",heater_specific_power_20*100," W/cm^2"));
+echo("");
+echo(str("Heater resistance at 100 °C: ", actual_heater_resistance_100," Ohm"));
+echo(str("Heater current at 100 °C: ",actual_heater_current_100," A"));
+echo(str("Heater power at 100 °C: ",actual_heater_power_100," W"));
+echo(str("Heater specific power at 100 °C: ",heater_specific_power_100*100," W/cm^2"));
 
 if (part=="all") {
     difference() {
@@ -105,7 +113,6 @@ if (part=="all") {
                         difference() {
                             bed_shape();
                     
-                            //bed_holes();
                             offset(heater_to_polygon_distance)
                                 heater_shape();
                         }
@@ -114,7 +121,6 @@ if (part=="all") {
                                 heater_shape();
                                 bed_shape();
                             }
-                            //contact_holes();
                         }
                     }
                 }
